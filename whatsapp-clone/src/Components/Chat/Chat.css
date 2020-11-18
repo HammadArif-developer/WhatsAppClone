@@ -1,0 +1,107 @@
+.chat {
+    display: flex;
+    flex-direction: column;
+    flex: 0.65;
+}
+
+.chatHeader {
+    padding: 10px;
+    display: flex;
+    align-items: center;
+    border-bottom: 1px solid lightgray;
+}
+.chatheaderInfo {
+    flex: 1;
+    padding-left: 20px;
+}
+
+.chatheaderInfo > h3 {
+    margin-bottom: 3px;
+    font-weight: 500;
+    font-size: 16px;
+    margin-top: 2px;
+}
+
+.chatheaderInfo > p {
+    color: gray;
+    margin: 0;
+    font-size: 12px;
+}
+
+.chatheaderRight {
+    display: flex;
+    justify-content: space-between;
+    min-width: 100px;
+}
+
+.chatBody {
+    flex: 1;
+    background-image: url("https://www.itl.cat/pngfile/big/2-28283_whatsapp-default-wallpaper-.jpg");
+    background-repeat: repeat;
+    background-position: center;
+    overflow: scroll;
+    padding: 30px;
+}
+
+.chatBody::-webkit-scrollbar {
+    display: none;
+}
+
+.chatMessage {
+    position: relative;
+    font-size: 14px;
+    padding: 10px;
+    border-radius: 10px;
+    width: fit-content;
+    background-color: #ffffff;
+    margin-bottom: 30px;
+}
+
+.chatName {
+    position: absolute;
+    top: -15px;
+    font-weight: 800;
+    font-size: xx-small;
+}
+
+.chatTimestamp {
+    margin-left: 10px;
+    font-size: xx-small;
+}
+
+.chatReciever {
+    margin-left: auto;
+    background-color: #dcf8c6;
+}
+
+.chatFooter {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 62px;
+    border-top: 1px solid lightgray;
+}
+
+.chatFooter > form {
+    flex: 1;
+    display: flex;
+}
+
+.chatFooter > form > input {
+    flex: 1;
+    border-radius: 30px;
+    padding: 10px;
+    border: none;
+    outline: none;
+}
+
+.chatFooter > form > button {
+    display: none;
+}
+
+.chatFooter > .MuiSvgIcon-root {
+    /* padding: 10px; */
+    margin: 10px;
+    color: gray;
+    font-size: 30px !important;
+}
