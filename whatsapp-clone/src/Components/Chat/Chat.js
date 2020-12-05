@@ -1,47 +1,57 @@
 import { Avatar, IconButton } from '@material-ui/core';
-import React, { useState,useEffect } from 'react';
+import React, { useState,useEffect, useRef } from 'react';
 import "./Chat.css";
 import { AttachFile, InsertEmoticon, Mic, MoreVert, SearchOutlined } from '@material-ui/icons';
 import axios from "axios";
-function Chat({roomid}) {
+import Popup from '../Popup/popup';
+function Chat({roomid,userid}) {
     const [messages,setMessages] = useState([]);
     const [users, setUsers] = useState([]);
     const [mymessage, setMymessage] = useState('');
     const [room, setRoom] = useState([{'room_name': '....'}]);
+    const messagesEndRef = useRef(null)
+    const [newchat, setNewchat] =  useState(false)
+    const [lastscene, setLastscene] = useState('0:00')
+    const [newroom, setNewroom] = useState(false)
+    const [lastid, setlastid] = useState(-1)
+
+    const Allowchat = e => {
+        setNewroom(e)
+    }
+
+    const scrollToBottom = () => {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
     useEffect(() => {
-        var apiBaseUrl = "http://localhost:4000/chatapp/";
-        var payload = {
-            'id' : roomid
-        }
-        async function fetchData() {
-            const request = await axios.post(apiBaseUrl + "messages",payload);
-            setMessages(request.data);
-            return request;
-        }
-        fetchData();
-        async function fetchUsers() {
-            const request = await axios.get(apiBaseUrl + "users");
-            setUsers(request.data);
-            return request;
-        }
-        fetchUsers();
-        var newpayload = {
-            'room_id' : roomid
-        }
-        async function fetchRoom() {
-            const request = await axios.post(apiBaseUrl + "singleroom",newpayload);
-            if(roomid === 0) {
-                console.log('checking none')    
-            } else {
-                setRoom(request.data);
+        if(roomid != -1 && lastid != -1) {
+            const config = {
+                headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+            };
+            var apiBaseUrl = "http://localhost:4000/chatapp/";
+            var payload = {
+                'id' : roomid
             }
-            return request;
+            async function Refresh() {
+                const request = await axios.post(apiBaseUrl + "refreshchat",payload,config);
+                if (request.data[0].id != lastid) {
+                    importdata()
+                }
+                return request;
+            }
+            Refresh();
+            scrollToBottom();
         }
-        fetchRoom();        
-    },[roomid])
+    });
+    useEffect(() => {
+        if (roomid != -1 && newroom) {
+            setNewroom(false)
+            importdata()
+            scrollToBottom();
+        }  
+    },[roomid,newroom])
     const checkuser = (id) => {
         for(var i=0;i<users.length;i++) {
-            if(id === users[i].id) {
+            if(id == users[i].id) {
                 return users[i].username
             }
         }
@@ -50,40 +60,84 @@ function Chat({roomid}) {
         return timestamp.substr(0,5)
     }
     const checkReciever = (user_id) => {
-        if(user_id == 1) {
+        if(user_id == userid) {
             return true;
         } else {
             return false;
         }
     }
-    const handleSubmit = (evt) => {
-        evt.preventDefault();
+    const importdata = () => {
+        const config = {
+            headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+        };
         var apiBaseUrl = "http://localhost:4000/chatapp/";
         var payload = {
-            'user_id' : 1,
-            'message' : mymessage,
-            'room_id' : roomid
+            'id' : roomid
         }
-        async function sendMessage() {
-            const request = await axios.post(apiBaseUrl + "addmessage",payload);
-            if (request.data.code === 201) {
-                var newpayload = {
-                    'id' : roomid
-                }
-                async function fetchData() {
-                    const request = await axios.post(apiBaseUrl + "messages",newpayload);
-                    setMessages(request.data);
-                    return request;
-                }
-                fetchData();
+        async function fetchData() {
+            const request = await axios.post(apiBaseUrl + "messages",payload,config);
+            setMessages(request.data);
+            if (request.data.length > 0) {
+                setLastscene(getTime(request.data[request.data.length - 1].time))
+                setlastid(request.data[request.data.length - 1].id)
+            } else {
+                setLastscene('0:00')
             }
             return request;
         }
-        sendMessage(); 
-        setMymessage('');
+        fetchData();
+        async function fetchUsers() {
+            const request = await axios.get(apiBaseUrl + "users",config);
+            setUsers(request.data);
+            return request;
+        }
+        fetchUsers();
+        var newpayload = {
+            'room_id' : roomid
+        }
+        async function fetchRoom() {
+            const request = await axios.post(apiBaseUrl + "singleroom",newpayload,config);
+            if(roomid != -1) {
+                setRoom(request.data);
+            }
+            return request;
+        }
+        fetchRoom(); 
+    }
+    const handleSubmit = (evt) => {
+        evt.preventDefault();
+        const config = {
+            headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+        };
+        if (roomid != -1 ) {
+            var apiBaseUrl = "http://localhost:4000/chatapp/";
+            var payload = {
+                'user_id' : userid,
+                'message' : mymessage,
+                'room_id' : roomid
+            }
+            async function sendMessage() {
+                const request = await axios.post(apiBaseUrl + "addmessage",payload,config);
+                if (request.data.code === 201) {
+                    var newpayload = {
+                        'id' : roomid
+                    }
+                    async function fetchData() {
+                        const request = await axios.post(apiBaseUrl + "messages",newpayload,config);
+                        setMessages(request.data);
+                        return request;
+                    }
+                    fetchData();
+                }
+                return request;
+            }
+            sendMessage(); 
+            setMymessage('');
+            scrollToBottom();   
+        }
     }
     const roomchecker = () => {
-        if (roomid===0) {
+        if (roomid===-1) {
             return false
         } else {
             return true
@@ -91,11 +145,12 @@ function Chat({roomid}) {
     }
     return (
         <div className="chat">
+            <Popup openup={newchat} Allowchat={Allowchat} roomid={roomid}/>
             <div className="chatHeader">
                     <Avatar />
                     <div className="chatheaderInfo">
                         <h3>{room[0].room_name}</h3>
-                        <p>Last seen at...</p>
+                        <p>Last seen at {lastscene}</p>
                     </div>
                     <div className="chatheaderRight">
                         <IconButton>
@@ -106,7 +161,7 @@ function Chat({roomid}) {
                         </IconButton>
                     </div>
             </div>
-            <div className="chatBody">
+            <div className="chatBody" >
                 {messages.map((message) => (
                     <div key={message.id} className={`chatMessage ${checkReciever(message.user_id) && 'chatReciever'}`}>
                         <span className="chatName">{checkuser(message.user_id)}</span>
@@ -114,6 +169,7 @@ function Chat({roomid}) {
                         <span className="chatTimestamp">{getTime(message.time)}</span>
                     </div>
                 ))}
+                <div ref={messagesEndRef} />
             </div>
             <div className="chatFooter">
                 <IconButton>

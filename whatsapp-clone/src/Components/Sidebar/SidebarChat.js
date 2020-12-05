@@ -7,6 +7,9 @@ function SidebarChat({ id, name, lastmessage, addnewChat, updateRooms, handleCli
     const createChat = () => {
         const roomName = prompt("Please enter name for chat");
         const Password = prompt("Please enter password");
+        const config = {
+            headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+        };
         if(roomName && Password) {
             var apiBaseUrl = "http://localhost:4000/chatapp/";
             var payload = {
@@ -15,7 +18,7 @@ function SidebarChat({ id, name, lastmessage, addnewChat, updateRooms, handleCli
                 'password': Password
             }
             async function fetchData() {
-                const request = await axios.post(apiBaseUrl + "addroom",payload);
+                const request = await axios.post(apiBaseUrl + "addroom",payload,config);
                 if(request.data.code === 201) {
                     updateRooms()
                 }

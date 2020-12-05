@@ -1,4 +1,5 @@
 const mysql = require('mysql');
+const jwt = require('jsonwebtoken');
 
 const connection = mysql.createConnection({
   host: 'localhost',
@@ -14,6 +15,10 @@ connection.connect((err) => {
 });
 
 exports.display = async function(req, res){
+  jwt.verify(req.token, 'hammadapi', (err, authData) => {
+    if (err) {
+        res.sendStatus(403);
+    } else {
     let roomId = req.body.room_id;
     connection.query("SELECT * FROM chatrooms where id=?",[roomId],async function (error,results,fields) {
       if (error) {
@@ -26,4 +31,6 @@ exports.display = async function(req, res){
         res.send(results);
       }
     });
+  }
+})
 };

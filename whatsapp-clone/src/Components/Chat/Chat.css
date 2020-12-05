@@ -43,6 +43,10 @@
     padding: 30px;
 }
 
+.hide {
+    display: none;
+}
+
 .chatBody::-webkit-scrollbar {
     display: none;
 }
