@@ -10,11 +10,13 @@ function Sidebar({handleClick}) {
     const [rooms, setRooms] = useState([]);
     const [toup, settoup] = useState(0);
     useEffect(() => {
+        const config = {
+            headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+        };
         var apiBaseUrl = "http://localhost:4000/chatapp/";
         async function fetchData() {
-            const request = await axios.get(apiBaseUrl + "rooms");
+            const request = await axios.get(apiBaseUrl + "rooms",config);
             setRooms(request.data);
-            console.log(request.data);
             return request;
         }
         fetchData();
